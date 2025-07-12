@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Audio Tour Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            padding: 15px 20px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .location-info {
+            padding: 20px;
+        }
+
+        .current-location {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .tour-content {
+            padding: 20px;
+            background: #f8f9fa;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tour-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .tour-description {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .audio-player {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .play-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .play-button:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .play-button.playing {
+            background: #f39c12;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .refresh-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-button:hover {
+            background: #2980b9;
+        }
+
+        .nearby-locations {
+            padding: 20px;
+        }
+
+        .nearby-title {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .location-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .location-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .location-distance {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎧 GPS Audio Tour</h1>
+            <p>Ontdek interessante plekken om je heen</p>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>GPS Status:</span>
+                <span id="gps-status">Zoeken...</span>
+            </div>
+            <div class="status-item">
+                <span>Actieve Tours:</span>
+                <span id="active-tours">0</span>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Zoeken naar je locatie...</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="refresh-button" onclick="updateLocation()">🔄 Ververs Locatie</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample tour locations (in real app, this would come from a server)
+        const tourLocations = [
+            {
+                id: 1,
+                name: "Centraal Station Amsterdam",
+                lat: 52.378773,
+                lng: 4.900469,
+                title: "Het Hart van Amsterdam",
+                description: "Amsterdam Centraal is het belangrijkste treinstation van Amsterdam. Gebouwd op kunstmatige eilanden in het IJ, werd het station geopend in 1889. Het architectonische ontwerp is van Pierre Cuypers, die ook het Rijksmuseum ontwierp.",
+                audioText: "Welkom bij Amsterdam Centraal Station. Dit imposante gebouw uit 1889 is ontworpen door Pierre Cuypers en staat op kunstmatige eilanden in het IJ. Het station is het kloppend hart van Amsterdam en verbindt de stad met de rest van Nederland en Europa."
+            },
+            {
+                id: 2,
+                name: "Dam Square Amsterdam",
+                lat: 52.373169,
+                lng: 4.892369,
+                title: "De Dam - Hart van de Stad",
+                description: "De Dam is het centrale plein van Amsterdam. Hier staat het Koninklijk Paleis, de Nieuwe Kerk en het Nationaal Monument. Het plein is al eeuwenlang het kloppend hart van de stad.",
+                audioText: "Je staat nu op de Dam, het historische hart van Amsterdam. Voor je zie je het Koninklijk Paleis, oorspronkelijk gebouwd als stadhuis in de 17de eeuw. Het imposante gebouw symboliseert de Gouden Eeuw van Amsterdam."
+            },
+            {
+                id: 3,
+                name: "Anne Frank Huis",
+                lat: 52.375171,
+                lng: 4.883926,
+                title: "Anne Frank Huis",
+                description: "Het Anne Frank Huis is een museum gewijd aan het leven van Anne Frank. Hier schreef zij haar beroemde dagboek tijdens de Tweede Wereldoorlog terwijl ze ondergedoken zat.",
+                audioText: "Je bevindt je bij het Anne Frank Huis, waar Anne Frank haar wereldberoemde dagboek schreef tijdens de Tweede Wereldoorlog. Dit huis vertelt het verhaal van een jong meisje dat droomde van een betere wereld."
+            },
+            {
+                id: 4,
+                name: "Vondelpark",
+                lat: 52.358416,
+                lng: 4.868856,
+                title: "Het Groene Hart van Amsterdam",
+                description: "Het Vondelpark is het grootste stadspark van Amsterdam. Vernoemd naar de dichter Joost van den Vondel, is het een populaire plek voor recreatie en evenementen.",
+                audioText: "Welkom in het Vondelpark, het groene long van Amsterdam. Dit 47 hectare grote park werd aangelegd in 1865 en is vernoemd naar de beroemde Nederlandse dichter Joost van den Vondel."
+            },
+            {
+                id: 5,
+                name: "Rijksmuseum",
+                lat: 52.359877,
+                lng: 4.885241,
+                title: "Nederlands Cultureel Erfgoed",
+                description: "Het Rijksmuseum is het nationale museum van Nederland. Het herbergt een wereldberoemde collectie Nederlandse kunst en geschiedenis, waaronder werken van Rembrandt en Vermeer.",
+                audioText: "Voor je staat het majestueuze Rijksmuseum, het nationale museum van Nederland. Dit prachtige gebouw van Pierre Cuypers uit 1885 herbergt meesterwerken van Rembrandt, Vermeer en andere grote Nederlandse meesters."
+            }
+        ];
+
+        let currentLocation = null;
+        let speechSynthesis = window.speechSynthesis;
+        let currentSpeech = null;
+        let isPlaying = false;
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lng2-lng1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c; // Distance in meters
+        }
+
+        function formatDistance(distance) {
+            if (distance < 1000) {
+                return Math.round(distance) + 'm';
+            } else {
+                return (distance / 1000).toFixed(1) + 'km';
+            }
+        }
+
+        function findNearbyLocations(userLat, userLng, maxDistance = 5000) {
+            return tourLocations
+                .map(location => ({
+                    ...location,
+                    distance: calculateDistance(userLat, userLng, location.lat, location.lng)
+                }))
+                .filter(location => location.distance <= maxDistance)
+                .sort((a, b) => a.distance - b.distance);
+        }
+
+        function playAudio(text) {
+            if (currentSpeech) {
+                speechSynthesis.cancel();
+            }
+
+            currentSpeech = new SpeechSynthesisUtterance(text);
+            currentSpeech.lang = 'nl-NL';
+            currentSpeech.rate = 0.9;
+            currentSpeech.pitch = 1;
+
+            currentSpeech.onstart = () => {
+                isPlaying = true;
+                updatePlayButtons();
+            };
+
+            currentSpeech.onend = () => {
+                isPlaying = false;
+                currentSpeech = null;
+                updatePlayButtons();
+            };
+
+            speechSynthesis.speak(currentSpeech);
+        }
+
+        function stopAudio() {
+            if (currentSpeech) {
+                speechSynthesis.cancel();
+                isPlaying = false;
+                currentSpeech = null;
+                updatePlayButtons();
+            }
+        }
+
+        function updatePlayButtons() {
+            const playButtons = document.querySelectorAll('.play-button');
+            playButtons.forEach(button => {
+                if (isPlaying) {
+                    button.classList.add('playing');
+                    button.innerHTML = '⏸️';
+                } else {
+                    button.classList.remove('playing');
+                    button.innerHTML = '▶️';
+                }
+            });
+        }
+
+        function displayContent(userLat, userLng) {
+            const nearbyLocations = findNearbyLocations(userLat, userLng);
+            const contentDiv = document.getElementById('content');
+            
+            if (nearbyLocations.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="location-info">
+                        <div class="current-location">
+                            <strong>Huidige locatie:</strong><br>
+                            Lat: ${userLat.toFixed(6)}, Lng: ${userLng.toFixed(6)}
+                        </div>
+                        <p style="text-align: center; color: #7f8c8d; padding: 40px;">
+                            Geen audio tours gevonden in de buurt.<br>
+                            Probeer een andere locatie of kom terug later.
+                        </p>
+                    </div>
+                `;
+                document.getElementById('active-tours').textContent = '0';
+                return;
+            }
+
+            const closestLocation = nearbyLocations[0];
+            
+            let html = `
+                <div class="location-info">
+                    <div class="current-location">
+                        <strong>Huidige locatie:</strong><br>
+                        Lat: ${userLat.toFixed(6)}, Lng: ${userLng.toFixed(6)}
+                    </div>
+                </div>
+            `;
+
+            // Show closest location as featured tour
+            if (closestLocation.distance < 500) {
+                html += `
+                    <div class="tour-content">
+                        <div class="tour-title">${closestLocation.title}</div>
+                        <div class="tour-description">${closestLocation.description}</div>
+                        <div class="audio-player">
+                            <p style="margin-bottom: 10px;">🎧 Audio Tour Beschikbaar</p>
+                            <button class="play-button" onclick="toggleAudio('${closestLocation.audioText}')">▶️</button>
+                            <p style="margin-top: 10px; font-size: 0.9em;">Afstand: ${formatDistance(closestLocation.distance)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Show nearby locations
+            html += `
+                <div class="nearby-locations">
+                    <div class="nearby-title">📍 Tours in de buurt</div>
+            `;
+
+            nearbyLocations.forEach(location => {
+                html += `
+                    <div class="location-item" onclick="selectLocation(${location.id})">
+                        <div class="location-name">${location.name}</div>
+                        <div class="location-distance">${formatDistance(location.distance)} afstand</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            contentDiv.innerHTML = html;
+            document.getElementById('active-tours').textContent = nearbyLocations.length;
+        }
+
+        function toggleAudio(text) {
+            if (isPlaying) {
+                stopAudio();
+            } else {
+                playAudio(text);
+            }
+        }
+
+        function selectLocation(locationId) {
+            const location = tourLocations.find(loc => loc.id === locationId);
+            if (location && currentLocation) {
+                const distance = calculateDistance(
+                    currentLocation.latitude, 
+                    currentLocation.longitude, 
+                    location.lat, 
+                    location.lng
+                );
+                
+                if (distance < 1000) { // Within 1km
+                    playAudio(location.audioText);
+                } else {
+                    alert(`Je bent te ver weg van ${location.name} (${formatDistance(distance)}). Kom dichterbij om de audio tour te beluisteren.`);
+                }
+            }
+        }
+
+        function updateLocation() {
+            document.getElementById('gps-status').textContent = 'Zoeken...';
+            document.getElementById('content').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Zoeken naar je locatie...</p>
+                </div>
+            `;
+
+            if (!navigator.geolocation) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        Je browser ondersteunt geen GPS locatie.
+                    </div>
+                `;
+                document.getElementById('gps-status').textContent = 'Niet ondersteund';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLocation = position.coords;
+                    document.getElementById('gps-status').textContent = 'Actief';
+                    displayContent(position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    let errorMessage = 'Onbekende fout';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'GPS toegang geweigerd';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'GPS niet beschikbaar';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'GPS timeout';
+                            break;
+                    }
+                    
+                    document.getElementById('content').innerHTML = `
+                        <div class="error">
+                            ${errorMessage}<br>
+                            <small>Zorg ervoor dat je GPS aan staat en geef de website toestemming om je locatie te gebruiken.</small>
+                        </div>
+                    `;
+                    document.getElementById('gps-status').textContent = errorMessage;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
+                }
+            );
+        }
+
+        // Initialize the app
+        updateLocation();
+
+        // Update location every 30 seconds
+        setInterval(updateLocation, 30000);
+    </script>
+</body>
+</html>

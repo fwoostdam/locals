@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard - Thijs vs Frank</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scoreboard {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        
+        .players {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 40px;
+        }
+        
+        .player {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .player-name {
+            font-size: 1.8em;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+        }
+        
+        .plus-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .plus-button:hover {
+            background: #218838;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+        
+        .plus-button:active {
+            transform: scale(0.95);
+        }
+        
+        .vs {
+            font-size: 2em;
+            color: #666;
+            font-weight: bold;
+            align-self: center;
+        }
+        
+        .reset-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .reset-button:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard">
+        <h1 class="title">Scoreboard</h1>
+        
+        <div class="players">
+            <div class="player">
+                <div class="player-name">Thijs</div>
+                <div class="score" id="thijs-score">0</div>
+                <button class="plus-button" onclick="addScore('thijs')">+</button>
+            </div>
+            
+            <div class="vs">VS</div>
+            
+            <div class="player">
+                <div class="player-name">Frank</div>
+                <div class="score" id="frank-score">0</div>
+                <button class="plus-button" onclick="addScore('frank')">+</button>
+            </div>
+        </div>
+        
+        <button class="reset-button" onclick="resetScores()">Reset Scores</button>
+    </div>
+
+    <script>
+        let scores = {
+            thijs: 0,
+            frank: 0
+        };
+
+        function addScore(player) {
+            scores[player]++;
+            document.getElementById(player + '-score').textContent = scores[player];
+            
+            // Save to localStorage
+            localStorage.setItem('scoreboard', JSON.stringify(scores));
+        }
+
+        function resetScores() {
+            scores.thijs = 0;
+            scores.frank = 0;
+            document.getElementById('thijs-score').textContent = 0;
+            document.getElementById('frank-score').textContent = 0;
+            
+            // Clear localStorage
+            localStorage.removeItem('scoreboard');
+        }
+
+        // Load scores from localStorage on page load
+        window.addEventListener('load', function() {
+            const savedScores = localStorage.getItem('scoreboard');
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+                document.getElementById('thijs-score').textContent = scores.thijs;
+                document.getElementById('frank-score').textContent = scores.frank;
+            }
+        });
+    </script>
+</body>
+</html>
