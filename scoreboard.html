@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoreboard - Thijs vs Frank</title>
+    <title>Scoreboard - Thisa vs Frank</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -117,9 +117,9 @@
         
         <div class="players">
             <div class="player">
-                <div class="player-name">Thijs</div>
-                <div class="score" id="thijs-score">0</div>
-                <button class="plus-button" onclick="addScore('thijs')">+</button>
+                <div class="player-name">Thisa</div>
+                <div class="score" id="thisa-score">0</div>
+                <button class="plus-button" onclick="addScore('thisa')">+</button>
             </div>
             
             <div class="vs">VS</div>
@@ -136,7 +136,7 @@
 
     <script>
         let scores = {
-            thijs: 0,
+            thisa: 0,
             frank: 0
         };
 
@@ -149,9 +149,9 @@
         }
 
         function resetScores() {
-            scores.thijs = 0;
+            scores.thisa = 0;
             scores.frank = 0;
-            document.getElementById('thijs-score').textContent = 0;
+            document.getElementById('thisa-score').textContent = 0;
             document.getElementById('frank-score').textContent = 0;
             
             // Clear localStorage
@@ -163,7 +163,7 @@
             const savedScores = localStorage.getItem('scoreboard');
             if (savedScores) {
                 scores = JSON.parse(savedScores);
-                document.getElementById('thijs-score').textContent = scores.thijs;
+                document.getElementById('thisa-score').textContent = scores.thisa;
                 document.getElementById('frank-score').textContent = scores.frank;
             }
         });
