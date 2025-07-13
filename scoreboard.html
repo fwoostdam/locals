@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoreboard - Thisa vs Frank</title>
+    <title>Scoreboard - Thisa vs Frenk</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,6 +74,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin: 0 10px;
         }
         
         .plus-button:hover {
@@ -83,6 +84,30 @@
         }
         
         .plus-button:active {
+            transform: scale(0.95);
+        }
+        
+        .minus-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            width: 60px;
+            height: 60px;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            margin: 0 10px;
+        }
+        
+        .minus-button:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+        }
+        
+        .minus-button:active {
             transform: scale(0.95);
         }
         
@@ -113,21 +138,26 @@
 </head>
 <body>
     <div class="scoreboard">
-        <h1 class="title">Scoreboard</h1>
         
         <div class="players">
             <div class="player">
                 <div class="player-name">Thisa</div>
                 <div class="score" id="thisa-score">0</div>
-                <button class="plus-button" onclick="addScore('thisa')">+</button>
+                <div>
+                    <button class="plus-button" onclick="addScore('thisa')">+</button>
+                    <button class="minus-button" onclick="subtractScore('thisa')">-</button>
+                </div>
             </div>
             
             <div class="vs">VS</div>
             
             <div class="player">
-                <div class="player-name">Frank</div>
-                <div class="score" id="frank-score">0</div>
-                <button class="plus-button" onclick="addScore('frank')">+</button>
+                <div class="player-name">Frenk</div>
+                <div class="score" id="frenk-score">0</div>
+                <div>
+                    <button class="plus-button" onclick="addScore('frenk')">+</button>
+                    <button class="minus-button" onclick="subtractScore('frenk')">-</button>
+                </div>
             </div>
         </div>
         
@@ -137,7 +167,7 @@
     <script>
         let scores = {
             thisa: 0,
-            frank: 0
+            frenk: 0
         };
 
         function addScore(player) {
@@ -148,11 +178,21 @@
             localStorage.setItem('scoreboard', JSON.stringify(scores));
         }
 
+        function subtractScore(player) {
+            if (scores[player] > 0) {
+                scores[player]--;
+                document.getElementById(player + '-score').textContent = scores[player];
+                
+                // Save to localStorage
+                localStorage.setItem('scoreboard', JSON.stringify(scores));
+            }
+        }
+
         function resetScores() {
             scores.thisa = 0;
-            scores.frank = 0;
+            scores.frenk = 0;
             document.getElementById('thisa-score').textContent = 0;
-            document.getElementById('frank-score').textContent = 0;
+            document.getElementById('frenk-score').textContent = 0;
             
             // Clear localStorage
             localStorage.removeItem('scoreboard');
@@ -164,7 +204,7 @@
             if (savedScores) {
                 scores = JSON.parse(savedScores);
                 document.getElementById('thisa-score').textContent = scores.thisa;
-                document.getElementById('frank-score').textContent = scores.frank;
+                document.getElementById('frenk-score').textContent = scores.frenk;
             }
         });
     </script>
